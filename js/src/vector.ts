@@ -97,11 +97,15 @@ export class Vector<T extends DataType = any> {
         this.stride = strideForType(type);
         this.numChildren = type.children?.length ?? 0;
         this.length = this._offsets[this._offsets.length - 1];
+
+        return new Proxy(this, new VectorProxyHandler());
     }
 
     declare protected _offsets: number[] | Uint32Array;
     declare protected _nullCount: number;
     declare protected _byteLength: number;
+
+    [index: number]: T['TValue'] | null;
 
     /**
      * The {@link DataType `DataType`} of this Vector.
@@ -425,6 +429,31 @@ class MemoizedVector<T extends DataType = any> extends Vector<T> {
         Object.defineProperty(this, 'memoize', {
             value: () => this
         });
+    }
+}
+
+class VectorProxyHandler<T extends DataType = any> implements ProxyHandler<Vector<T>> {
+    get(target: Vector<T>, key: string, receiver: any) {
+        if (typeof key === "string") { // Need to check because key can be a symbol, such as [Symbol.iterator].
+            const idx = +key; // Convert the key to a number
+            if (idx === idx) { // Basically an inverse NaN check
+                return Reflect.get(target, "get", receiver)(idx);
+            }
+        }
+
+        return Reflect.get(target, key, receiver);
+    }
+
+    set(target: Vector<T>, key: string, value: any, receiver: any) {
+        if (typeof key === "string") { // Need to check because key can be a symbol, such as [Symbol.iterator].
+            const idx = +key; // Convert the key to a number
+            if (idx === idx) { // Basically an inverse NaN check
+                Reflect.get(target, "set", receiver)(idx, value);
+                return true; // Is this correct?
+            }
+        }
+
+        return Reflect.set(target, key, value, receiver);
     }
 }
 
