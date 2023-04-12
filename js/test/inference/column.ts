@@ -61,8 +61,8 @@ const structColumn = new Vector([
     new Vector([makeData({ type: structType, length: 0, nullCount: 0, children: [] })]),
 ]);
 
-const [x1, y1, z1] = structVector.get(0)!;
-const [x2, y2, z2] = structColumn.get(0)!;
+const [x1, y1, z1] = structVector.get(0)!.iterator();
+const [x2, y2, z2] = structColumn.get(0)!.iterator();
 
 console.log(x1, y1, z1);
 console.log(x2, y2, z2);
